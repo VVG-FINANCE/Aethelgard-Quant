@@ -41,6 +41,17 @@ def main():
         df = DataManager.fetch_data()
 
     if df is not None:
+        # Certifica que a coluna Close é numérica e remove erros de conversão
+df['Close'] = pd.to_numeric(df['Close'], errors='coerce')
+
+# Remove linhas que ficaram com valor nulo (NaN) após a conversão
+df = df.dropna(subset=['Close'])
+
+# Agora sim, roda o Filtro de Kalman
+if not df.empty:
+    kf = KalmanFilter(process_variance=1e-5, measurement_variance=1e-3)
+    df['Kalman'] = [kf.update(x) for x in df['Close']]
+
         # 1. Aplicação do Filtro de Kalman (Redução de Ruído)
         kf = KalmanFilter(process_variance=1e-5, measurement_variance=1e-3)
         df['Kalman'] = [kf.update(x) for x in df['Close']]
